@@ -1,5 +1,5 @@
 'use strict';
-// Suivi tokens : icône dans la zone de notification, aperçu au clic, tableau de bord,
+// Tokenmètre : icône dans la zone de notification, aperçu au clic, tableau de bord,
 // lancement au démarrage de Windows. Tout reste local : aucune requête réseau.
 
 const {
@@ -224,7 +224,7 @@ const planName = () => (config.plan ? `Claude ${config.plan}` : 'Claude');
 const fmtPct = (v) => `${Math.round(v)} %`; // arrondi à l'unité, comme Claude
 
 function tooltipText() {
-  if (!week) return 'Suivi tokens : lecture des journaux…';
+  if (!week) return 'Tokenmètre : lecture des journaux…';
   const reset = new Date(week.end * 1000).toLocaleString('fr-FR', { weekday: 'short', hour: 'numeric' });
   if (week.pct == null) return `${planName()} : à calibrer (clic)\nRéinitialisation ${week.anchorKnown ? reset : 'à renseigner'}`;
   const lines = [`${planName()} : ≈ ${fmtPct(week.pct)} de la semaine`];
@@ -280,7 +280,7 @@ function openDashboard() {
   if (dash && !dash.isDestroyed()) { dash.show(); dash.focus(); return; }
   const dark = nativeTheme.shouldUseDarkColors;
   dash = new BrowserWindow({
-    width: 1240, height: 880, minWidth: 760, minHeight: 560, show: false, title: 'Suivi tokens',
+    width: 1240, height: 880, minWidth: 760, minHeight: 560, show: false, title: 'Tokenmètre',
     icon: APP_ICON, backgroundMaterial: 'acrylic', backgroundColor: '#00000000',
     titleBarStyle: 'hidden',
     titleBarOverlay: { color: '#00000000', symbolColor: dark ? '#ffffff' : '#1d1d1f', height: 44 },
@@ -296,7 +296,7 @@ function openDashboard() {
 // Electron met lui-même les arguments entre guillemets dans la clé Run.
 function loginItem() {
   const args = app.isPackaged ? ['--hidden'] : [app.getAppPath(), '--hidden'];
-  return { path: process.execPath, args, name: 'Suivi tokens' };
+  return { path: process.execPath, args, name: 'Tokenmètre' };
 }
 
 function getAutostart() {
@@ -418,7 +418,7 @@ if (!app.requestSingleInstanceLock()) {
 } else {
   app.on('second-instance', () => openDashboard());
   app.on('window-all-closed', () => { /* l'app reste dans la zone de notification */ });
-  app.setAppUserModelId('Suivi tokens');
+  app.setAppUserModelId('com.adrench.tokenmetre');
 
   app.whenReady().then(() => {
     lockDownNetwork();

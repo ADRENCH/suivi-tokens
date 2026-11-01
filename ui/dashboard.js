@@ -278,7 +278,8 @@ function renderSettings() {
   $('#autostart').checked = S.autostart;
   const d = S.data;
   $('#info').textContent = d
-    ? `${fmtN.format(d.messages)} réponses lues dans ${fmtN.format(d.filesTotal)} fichiers (${String(d.scanSeconds).replace('.', ',')} s). Actualisation toutes les 2 minutes.`
+    ? `${fmtN.format(d.messages)} réponses lues dans ${fmtN.format(d.filesTotal)} fichiers (${String(d.scanSeconds).replace('.', ',')} s)` +
+      `${d.filesArchived ? `, plus ${fmtN.format(d.filesArchived)} journaux effacés par Claude Code et gardés en archive` : ''}. Actualisation toutes les 2 minutes.`
     : '';
   $('#priceNote').textContent = d ? `Tarifs du ${new Date(d.pricesDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}.` +
     (d.unpricedModels.length ? ` Sans tarif connu (comptés à 0 $) : ${d.unpricedModels.join(', ')}.` : '') : '';

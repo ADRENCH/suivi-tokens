@@ -225,6 +225,15 @@ function scan() {
     }
     files[file] = e;
   }
+  // Journaux effacés depuis (Claude Code les supprime au bout de 30 jours par défaut) :
+  // on garde ce qu'on en avait lu, pour que l'historique ne fonde pas.
+  let archived = 0;
+  for (const [file, e] of Object.entries(cache)) {
+    if (!files[file] && Object.keys(e.msgs).length) {
+      files[file] = e;
+      archived++;
+    }
+  }
   if (reparsed || Object.keys(files).length !== Object.keys(cache).length) saveCache(files);
   cache = files;
 
@@ -266,6 +275,7 @@ function scan() {
     scanSeconds: Math.round((Date.now() - t0) / 100) / 10,
     filesReparsed: reparsed,
     filesTotal: list.length,
+    filesArchived: archived,
     messages: seen.size,
     pricesDate: PRICES_DATE,
     unpricedModels: [...unpriced].sort(),

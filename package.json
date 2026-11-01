@@ -1,15 +1,44 @@
 {
-  "name": "suivi-tokens",
-  "productName": "Suivi tokens",
-  "version": "2.0.0",
-  "description": "Suivi de la consommation Claude Code et des crédits d'abonnement, dans la zone de notification.",
+  "name": "tokenmetre",
+  "productName": "Tokenmètre",
+  "version": "1.0.0",
+  "description": "Suivi local de la consommation Claude Code et des crédits d'abonnement, dans la zone de notification.",
+  "author": "ADRENCH",
+  "license": "MIT",
   "main": "main.js",
   "private": true,
   "scripts": {
     "start": "electron .",
-    "icon": "electron scripts/build-icon.js"
+    "icon": "electron scripts/build-icon.js",
+    "dist": "electron-builder --win nsis --publish never"
   },
   "devDependencies": {
-    "electron": "45.2.1"
+    "electron": "45.2.1",
+    "electron-builder": "26.18.0"
+  },
+  "build": {
+    "appId": "com.adrench.tokenmetre",
+    "productName": "Tokenmètre",
+    "copyright": "ADRENCH",
+    "asar": false,
+    "directories": { "output": "dist" },
+    "files": ["main.js", "preload.js", "scanner.js", "ui/**", "assets/icon.ico", "assets/icon.png", "package.json"],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "assets/icon.ico"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Tokenmètre",
+      "artifactName": "Tokenmetre-Setup.exe",
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "uninstallDisplayName": "Tokenmètre",
+      "runAfterFinish": true,
+      "deleteAppDataOnUninstall": false
+    }
   }
 }
