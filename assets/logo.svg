@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="bg" x1="0.15" y1="0" x2="0.85" y2="1">
+      <stop offset="0" stop-color="#FFB547"/>
+      <stop offset="0.48" stop-color="#FF6B3D"/>
+      <stop offset="1" stop-color="#D6263F"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.62" r="0.5">
+      <stop offset="0" stop-color="#FFE3A3" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#FFE3A3" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="sheen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.42"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="glass" x1="0.3" y1="0" x2="0.6" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.97"/>
+      <stop offset="1" stop-color="#FFF4EC" stop-opacity="0.80"/>
+    </linearGradient>
+    <linearGradient id="core" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0" stop-color="#FFC94D"/>
+      <stop offset="1" stop-color="#FF5A36"/>
+    </linearGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff" stop-opacity="0.7"/>
+      <stop offset="0.5" stop-color="#fff" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#fff" stop-opacity="0.25"/>
+    </linearGradient>
+    <clipPath id="tile"><rect x="40" y="32" width="944" height="944" rx="224"/></clipPath>
+    <filter id="drop" x="-10%" y="-10%" width="120%" height="125%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#5A0E1E" flood-opacity="0.32"/>
+    </filter>
+    <filter id="flameShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="20" flood-color="#9C1B22" flood-opacity="0.45"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#drop)">
+    <rect x="40" y="32" width="944" height="944" rx="224" fill="url(#bg)"/>
+  </g>
+  <g clip-path="url(#tile)">
+    <rect x="40" y="32" width="944" height="944" fill="url(#glow)"/>
+    <path d="M40 32H984V420C800 350 610 330 512 330S224 350 40 420Z" fill="url(#sheen)"/>
+  </g>
+  <rect x="42" y="34" width="940" height="940" rx="222" fill="none" stroke="url(#rim)" stroke-width="4"/>
+
+  <g transform="translate(512 504) scale(1.14) translate(-512 -511)">
+    <g filter="url(#flameShadow)">
+      <path d="M530 226C568 312 694 390 694 574C694 706 612 796 512 796C412 796 330 706 330 588C330 498 378 436 426 388C432 450 456 490 490 506C472 420 484 312 530 226Z"
+            fill="url(#glass)"/>
+    </g>
+    <path d="M530 226C568 312 694 390 694 574C694 706 612 796 512 796C412 796 330 706 330 588C330 498 378 436 426 388C432 450 456 490 490 506C472 420 484 312 530 226Z"
+          fill="none" stroke="#fff" stroke-opacity="0.9" stroke-width="5"/>
+    <path d="M517 498C550 552 606 598 606 666C606 726 566 764 512 764C458 764 418 726 418 670C418 620 448 586 476 558C480 588 492 606 512 614C503 578 504 536 517 498Z"
+          fill="url(#core)"/>
+    <path d="M462 650C462 618 478 596 494 580" fill="none" stroke="#fff" stroke-opacity="0.55" stroke-width="12" stroke-linecap="round"/>
+  </g>
+</svg>

@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+<title>Suivi tokens</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  body { overflow: hidden; }
+  #root { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+  .head { display: flex; align-items: center; justify-content: space-between; padding: 2px 4px 0; }
+  .head .title { font-weight: 600; font-size: 13px; }
+  .hero { padding: 16px 16px 14px; display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: center; }
+  .ringwrap { position: relative; width: 128px; height: 128px; }
+  .ringwrap .center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+  .ringwrap .center .big { font-size: 30px; }
+  .facts { display: flex; flex-direction: column; gap: 8px; }
+  .facts .k { font-size: 11px; color: var(--text-3); }
+  .facts .v { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .state { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 3px 9px; border-radius: 999px; background: var(--track); width: fit-content; }
+  .proj { padding: 14px 14px 8px; }
+  .proj p { margin: 0 0 6px; color: var(--text-2); font-size: 12.5px; line-height: 1.4; }
+  .proj p b { color: var(--text); font-weight: 600; }
+  .tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .tile { padding: 12px 14px; }
+  .tile .v { font-size: 20px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .tile .s { font-size: 11.5px; color: var(--text-3); }
+  .cal { display: flex; gap: 6px; align-items: center; padding: 10px 12px; }
+  .cal label { font-size: 12px; color: var(--text-2); flex: 1; }
+  .cal .field { width: 64px; text-align: right; }
+  .foot { display: flex; gap: 8px; }
+  .foot .btn { flex: 1; }
+  .err { color: var(--state-out); font-size: 12px; padding: 0 4px; }
+</style>
+</head>
+<body>
+<div id="root">
+  <div class="head">
+    <span style="display:inline-flex;align-items:center;gap:8px"><img src="../assets/icon.png" width="20" height="20" alt=""><span class="title" id="plan">Claude</span></span>
+    <button class="btn icon" id="refresh" title="Actualiser" aria-label="Actualiser">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2.5v3h-3"/></svg>
+    </button>
+  </div>
+
+  <section class="glass hero">
+    <div class="ringwrap">
+      <div id="ring"></div>
+      <div class="center"><div class="big num" id="pct">—</div><div class="faint" style="font-size:11px">de la semaine</div></div>
+    </div>
+    <div class="facts">
+      <span class="state" id="state"><i class="dot"></i><span></span></span>
+      <div><div class="k">Reste</div><div class="v num" id="left">—</div></div>
+      <div><div class="k">Réinitialisation</div><div class="v" id="reset">—</div><div class="faint" style="font-size:11.5px" id="resetIn"></div></div>
+    </div>
+  </section>
+
+  <section class="glass proj">
+    <p id="projText">Lecture des journaux…</p>
+    <div id="chart"></div>
+  </section>
+
+  <div class="tiles">
+    <section class="glass tile"><div class="eyebrow">Aujourd'hui</div><div class="v" id="todayPct">—</div><div class="s" id="todaySub"></div></section>
+    <section class="glass tile"><div class="eyebrow">Jour type</div><div class="v" id="typPct">—</div><div class="s" id="typSub"></div></section>
+  </div>
+
+  <form class="glass cal" id="calForm">
+    <label for="calInput">% affiché dans Claude</label>
+    <input class="field num" id="calInput" type="number" min="0" max="100" step="1" placeholder="%" required>
+    <button class="btn" type="submit">Recaler</button>
+  </form>
+
+  <div class="err" id="err" hidden></div>
+
+  <div class="foot">
+    <button class="btn primary" id="openDash" type="button">Tableau de bord</button>
+  </div>
+</div>
+<script src="week.js"></script>
+<script src="common.js"></script>
+<script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:">
+<title>Suivi tokens</title>
+<link rel="stylesheet" href="style.css">
+<style>
+  .titlebar { height: 44px; display: flex; align-items: center; gap: 10px; padding: 0 150px 0 20px; -webkit-app-region: drag; }
+  .titlebar .name { font-weight: 600; font-size: 13px; }
+  .titlebar .status { color: var(--text-3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .titlebar button { -webkit-app-region: no-drag; }
+  main { height: calc(100vh - 44px); overflow-y: auto; padding: 4px 24px 40px; user-select: text; }
+  .wrap { max-width: 1160px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+  h2 { font-size: 20px; font-weight: 600; letter-spacing: -0.02em; margin: 18px 4px 0; }
+
+  .week { display: grid; grid-template-columns: 340px 1fr; gap: 16px; }
+  .weekHero { padding: 22px; display: flex; flex-direction: column; gap: 16px; }
+  .weekHero .top { display: flex; gap: 18px; align-items: center; }
+  .ringwrap { position: relative; width: 150px; height: 150px; flex: none; }
+  .ringwrap .center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+  .state { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: var(--track); width: fit-content; }
+  .facts { display: flex; flex-direction: column; gap: 10px; }
+  .facts .k { font-size: 11px; color: var(--text-3); }
+  .facts .v { font-size: 16px; font-weight: 600; letter-spacing: -0.01em; }
+  .projText { margin: 0; color: var(--text-2); line-height: 1.45; }
+  .projText b { color: var(--text); }
+  .limitNote { font-size: 12px; color: var(--text-3); margin: 0; }
+  .weekChart { padding: 18px 20px 14px; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--text-2); flex-wrap: wrap; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .legend i { width: 14px; height: 0; border-top: 2.4px solid; display: inline-block; }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-top: 4px; }
+  .day { display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 11.5px; }
+  .day .bars { position: relative; width: 100%; max-width: 46px; height: 64px; display: flex; align-items: flex-end; justify-content: center; }
+  .day .ghost, .day .fill { position: absolute; bottom: 0; width: 100%; border-radius: 7px 7px 3px 3px; }
+  .day .ghost { background: var(--track); }
+  .day .fill { background: var(--accent); width: 62%; }
+  .day.future .fill { opacity: 0; }
+  .day .lab { color: var(--text-3); }
+  .day.today .lab { color: var(--text); font-weight: 600; }
+  .day .val { font-variant-numeric: tabular-nums; color: var(--text-2); }
+
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .kpi { padding: 14px 16px; }
+  .kpi.hero { grid-column: span 2; }
+  .kpi .label { font-size: 12px; color: var(--text-2); }
+  .kpi .value { font-size: 26px; font-weight: 600; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .kpi.hero .value { font-size: 34px; }
+  .kpi .hint { font-size: 11.5px; color: var(--text-3); }
+  .card { padding: 18px 20px; }
+  .card h3 { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
+  .legendModels { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--text-2); margin-bottom: 8px; }
+  .legendModels span { display: inline-flex; align-items: center; gap: 6px; }
+  .legendModels i { width: 9px; height: 9px; border-radius: 3px; display: inline-block; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid2 > * { min-width: 0; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: 12.5px; }
+  th, td { padding: 8px 8px; text-align: right; border-bottom: 0.5px solid var(--hairline); white-space: nowrap; }
+  tr:last-child td { border-bottom: 0; }
+  th { color: var(--text-3); font-weight: 500; font-size: 11.5px; }
+  th:first-child, td:first-child { text-align: left; }
+  td.name { white-space: normal; min-width: 150px; }
+  td .meta { display: block; color: var(--text-3); font-size: 11.5px; }
+  td .sq { width: 9px; height: 9px; border-radius: 3px; display: inline-block; margin-right: 7px; }
+  .share { height: 3px; background: var(--track); border-radius: 2px; margin-top: 5px; }
+  .share > div { height: 100%; background: var(--accent); border-radius: 2px; }
+  .empty { color: var(--text-3); padding: 20px 0; text-align: center; }
+
+  .settings { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  .settings h3 { margin: 0 0 6px; }
+  .settings p { margin: 0 0 10px; color: var(--text-2); font-size: 12.5px; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 10px; }
+  .cals { list-style: none; margin: 0; padding: 0; }
+  .cals li { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 0.5px solid var(--hairline); font-size: 12.5px; }
+  .cals li:last-child { border-bottom: 0; }
+  .cals li .w { flex: 1; }
+  .cals li button { border: 0; background: transparent; color: var(--text-3); cursor: pointer; font-size: 15px; padding: 0 4px; }
+  .cals li button:hover { color: var(--state-out); }
+  .switch { display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
+  .switch input { appearance: none; width: 38px; height: 22px; border-radius: 999px; background: var(--track); position: relative; cursor: pointer; transition: background .2s; margin: 0; }
+  .switch input::after { content: ""; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform .2s; }
+  .switch input:checked { background: var(--state-ok); }
+  .switch input:checked::after { transform: translateX(16px); }
+  .note { font-size: 11.5px; color: var(--text-3); line-height: 1.5; margin: 4px 4px 0; }
+
+  @media (max-width: 980px) {
+    .week, .settings, .grid2 { grid-template-columns: 1fr; }
+    .kpis { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+<header class="titlebar">
+  <img src="../assets/icon.png" width="20" height="20" alt="">
+  <span class="name">Suivi tokens</span>
+  <span class="status" id="status">Lecture des journaux…</span>
+  <button class="btn icon" id="refresh" title="Actualiser" aria-label="Actualiser">
+    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M13.5 8a5.5 5.5 0 1 1-1.6-3.9M13.5 2.5v3h-3"/></svg>
+  </button>
+</header>
+
+<main>
+<div class="wrap">
+  <section class="week">
+    <div class="glass weekHero">
+      <div class="eyebrow" id="planLabel">Abonnement</div>
+      <div class="top">
+        <div class="ringwrap">
+          <div id="ring"></div>
+          <div class="center"><div class="big" id="pct">—</div><div class="faint" style="font-size:11px">de la semaine</div></div>
+        </div>
+        <div class="facts">
+          <span class="state" id="state"><i class="dot"></i><span></span></span>
+          <div><div class="k">Reste</div><div class="v num" id="left">—</div></div>
+          <div><div class="k">Réinitialisation</div><div class="v" id="reset">—</div><div class="faint" style="font-size:11.5px" id="resetIn"></div></div>
+        </div>
+      </div>
+      <p class="projText" id="projText"></p>
+      <p class="limitNote" id="limitNote"></p>
+    </div>
+    <div class="glass weekChart">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap">
+        <div class="eyebrow">Cette semaine, en % de ta limite</div>
+        <div class="legend">
+          <span><i style="border-color:var(--accent)"></i>Réel</span>
+          <span><i style="border-color:var(--state-ok);border-top-style:dashed"></i>Prévu</span>
+          <span><i style="border-color:var(--text-3)"></i>Semaine type</span>
+        </div>
+      </div>
+      <div id="weekChart"></div>
+      <div class="days" id="days"></div>
+    </div>
+  </section>
+
+  <h2>Historique</h2>
+  <div class="filters">
+    <div class="seg" id="period" role="group" aria-label="Période">
+      <button type="button" data-p="5h">5 h</button>
+      <button type="button" data-p="today">Aujourd'hui</button>
+      <button type="button" data-p="7d">7 j</button>
+      <button type="button" data-p="30d" aria-pressed="true">30 j</button>
+      <button type="button" data-p="90d">90 j</button>
+      <button type="button" data-p="all">Tout</button>
+    </div>
+    <select class="pill" id="fModel" aria-label="Modèle"></select>
+    <select class="pill" id="fProject" aria-label="Projet"></select>
+    <select class="pill" id="fMetric" aria-label="Mesure">
+      <option value="cost">Coût équivalent API</option>
+      <option value="credit">Crédit d'abonnement</option>
+      <option value="total">Tokens au total</option>
+      <option value="out">Tokens de sortie</option>
+      <option value="cr">Lecture cache</option>
+      <option value="n">Réponses</option>
+    </select>
+  </div>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="glass card">
+    <h3 id="chartTitle">Par jour</h3>
+    <div class="legendModels" id="legend"></div>
+    <div id="chart" style="position:relative"></div>
+  </section>
+
+  <div class="grid2">
+    <section class="glass card"><h3>Par modèle</h3><div class="table-wrap" id="tModels"></div></section>
+    <section class="glass card"><h3>Par projet</h3><div class="table-wrap" id="tProjects"></div></section>
+  </div>
+  <section class="glass card"><h3>Sessions les plus gourmandes</h3><div class="table-wrap" id="tSessions"></div></section>
+
+  <h2>Réglages</h2>
+  <section class="glass card settings">
+    <div>
+      <h3>Calibrer la limite</h3>
+      <p>Ouvre Claude › Réglages › Utilisation et recopie le % de la limite hebdomadaire « tous modèles ». Plus le % est élevé, plus l'estimation est précise : recale de temps en temps, surtout en milieu ou en fin de semaine.</p>
+      <form class="row" id="calForm">
+        <input class="field num" id="calInput" type="number" min="0" max="100" step="1" placeholder="%" style="width:80px" required>
+        <button class="btn primary" type="submit">Enregistrer le relevé</button>
+      </form>
+      <ul class="cals" id="cals"></ul>
+    </div>
+    <div>
+      <h3>Semaine d'abonnement</h3>
+      <p>Date de la prochaine réinitialisation, telle qu'affichée dans Claude. Les suivantes en découlent, de semaine en semaine.</p>
+      <form class="row" id="resetForm">
+        <input class="field" id="resetInput" type="datetime-local" required>
+        <button class="btn" type="submit">Modifier</button>
+      </form>
+      <form class="row" id="planForm">
+        <input class="field" id="planInput" type="text" maxlength="30" placeholder="Pro, Max…" style="width:160px">
+        <button class="btn" type="submit">Renommer le forfait</button>
+      </form>
+      <h3 style="margin-top:18px">Démarrage</h3>
+      <label class="switch"><input type="checkbox" id="autostart"> Lancer avec Windows, dans la zone de notification</label>
+      <p class="note" id="info" style="margin-top:14px"></p>
+    </div>
+  </section>
+
+  <p class="note">
+    Source : journaux locaux de Claude Code (<code>~/.claude/projects</code>), sous-agents compris ; claude.ai et l'onglet Chat n'y figurent pas.
+    <b>Coût équivalent API</b> : ce que ces réponses auraient coûté au tarif public d'Anthropic, en dollars.
+    <b>Crédit d'abonnement</b> : le même coût sans la lecture du cache, la mesure qui suit le mieux ta limite hebdomadaire (vérifié sur tes relevés).
+    Le % de la semaine est une estimation tant qu'il n'est pas recalé avec celui de Claude.
+    <span id="priceNote"></span>
+  </p>
+</div>
+</main>
+<script src="week.js"></script>
+<script src="common.js"></script>
+<script src="dashboard.js"></script>
+</body>
+</html>

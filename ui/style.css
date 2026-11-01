@@ -1,0 +1,138 @@
+/* Verre dépoli minimaliste : la fenêtre est en acrylique (flou du bureau derrière),
+   les cartes ajoutent une couche translucide, un liseré lumineux et une ombre douce. */
+:root {
+  color-scheme: light;
+  --font: "Segoe UI Variable Display", "Segoe UI Variable Text", "Segoe UI", system-ui, sans-serif;
+  --tint: rgba(246, 246, 250, 0.42);
+  --text: rgba(0, 0, 0, 0.88);
+  --text-2: rgba(0, 0, 0, 0.62);
+  --text-3: rgba(0, 0, 0, 0.48);
+  --glass: rgba(255, 255, 255, 0.5);
+  --glass-hover: rgba(255, 255, 255, 0.66);
+  --glass-strong: rgba(255, 255, 255, 0.82);
+  --rim: rgba(255, 255, 255, 0.85);
+  --edge: rgba(0, 0, 0, 0.07);
+  --hairline: rgba(0, 0, 0, 0.07);
+  --grid: rgba(0, 0, 0, 0.06);
+  --track: rgba(0, 0, 0, 0.08);
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 10px 30px rgba(0, 0, 0, 0.07);
+  --accent: #f0592b;
+  --accent-soft: rgba(240, 89, 43, 0.14);
+  --state-ok: #f0592b;
+  --state-warn: #e0201b;
+  --state-out: #c4103d;
+  --state-uncalibrated: #8e8e93;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100;
+  --s5: #e87ba4; --s6: #008300; --s7: #6250d6; --s-other: #9b9a94;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+    --tint: rgba(18, 18, 22, 0.38);
+    --text: rgba(255, 255, 255, 0.93);
+    --text-2: rgba(255, 255, 255, 0.66);
+    --text-3: rgba(255, 255, 255, 0.5);
+    --glass: rgba(255, 255, 255, 0.07);
+    --glass-hover: rgba(255, 255, 255, 0.11);
+    --glass-strong: rgba(255, 255, 255, 0.16);
+    --rim: rgba(255, 255, 255, 0.16);
+    --edge: rgba(0, 0, 0, 0.3);
+    --hairline: rgba(255, 255, 255, 0.08);
+    --grid: rgba(255, 255, 255, 0.07);
+    --track: rgba(255, 255, 255, 0.1);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 12px 36px rgba(0, 0, 0, 0.28);
+    --accent: #ff7445;
+    --accent-soft: rgba(255, 116, 69, 0.22);
+    --state-ok: #ff7445;
+    --state-warn: #ff453a;
+    --state-out: #ff2d6f;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500;
+    --s5: #d55181; --s6: #008300; --s7: #9085e9; --s-other: #6d6c66;
+  }
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--tint);
+  color: var(--text);
+  font: 13px/1.45 var(--font);
+  -webkit-font-smoothing: antialiased;
+  user-select: none;
+  overflow: hidden;
+}
+input, button, select { font: inherit; color: inherit; }
+::selection { background: var(--accent-soft); }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: var(--track); border-radius: 10px; border: 3px solid transparent; background-clip: content-box; }
+
+.glass {
+  position: relative;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0) 42%), var(--glass);
+  border: 0.5px solid var(--edge);
+  border-radius: 22px;
+  box-shadow: inset 0 1px 0 var(--rim), var(--shadow);
+}
+
+.eyebrow { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); }
+.muted { color: var(--text-2); }
+.faint { color: var(--text-3); }
+.num { font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.big { font-size: 34px; font-weight: 600; letter-spacing: -0.035em; line-height: 1.05; font-variant-numeric: tabular-nums; }
+
+.btn {
+  border: 0.5px solid var(--edge);
+  background: var(--glass-strong);
+  box-shadow: inset 0 1px 0 var(--rim), 0 1px 2px rgba(0, 0, 0, 0.06);
+  border-radius: 999px;
+  padding: 7px 14px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background 0.15s, transform 0.1s;
+}
+.btn:hover { background: var(--glass-hover); }
+.btn:active { transform: scale(0.97); }
+.btn.primary { background: var(--accent); color: #fff; border-color: transparent; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12); }
+.btn.icon { padding: 6px; width: 30px; height: 30px; display: inline-grid; place-items: center; }
+.btn:focus-visible, .field:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.field {
+  border: 0.5px solid var(--edge);
+  background: var(--glass);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.06);
+  border-radius: 10px;
+  padding: 6px 10px;
+  outline: none;
+  user-select: text;
+}
+
+.seg { display: inline-flex; padding: 3px; border-radius: 999px; background: var(--track); gap: 2px; }
+.seg button { border: 0; background: transparent; padding: 5px 12px; border-radius: 999px; cursor: pointer; color: var(--text-2); font-weight: 500; }
+.seg button[aria-pressed="true"] { background: var(--glass-strong); color: var(--text); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12), inset 0 1px 0 var(--rim); }
+
+select.pill {
+  appearance: none;
+  border: 0.5px solid var(--edge);
+  background: var(--glass) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 12px center;
+  border-radius: 999px;
+  padding: 6px 30px 6px 14px;
+  cursor: pointer;
+}
+select.pill option { background: Canvas; color: CanvasText; }
+
+.dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.ring text { font-family: var(--font); }
+
+.tip {
+  position: absolute; pointer-events: none; z-index: 5; display: none;
+  background: var(--glass-strong);
+  backdrop-filter: blur(24px) saturate(180%);
+  border: 0.5px solid var(--edge);
+  box-shadow: inset 0 1px 0 var(--rim), var(--shadow);
+  border-radius: 12px; padding: 8px 10px; font-size: 12px; min-width: 150px;
+}
+.tip b { display: block; margin-bottom: 3px; font-weight: 600; }
+.tip .row { display: flex; justify-content: space-between; gap: 14px; font-variant-numeric: tabular-nums; }
+.tip .row span:first-child { display: inline-flex; align-items: center; gap: 6px; color: var(--text-2); }
+
+svg text { fill: var(--text-3); font-size: 10.5px; font-family: var(--font); }

@@ -1,0 +1,15 @@
+{
+  "name": "suivi-tokens",
+  "productName": "Suivi tokens",
+  "version": "2.0.0",
+  "description": "Suivi de la consommation Claude Code et des crédits d'abonnement, dans la zone de notification.",
+  "main": "main.js",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "icon": "electron scripts/build-icon.js"
+  },
+  "devDependencies": {
+    "electron": "45.2.1"
+  }
+}
