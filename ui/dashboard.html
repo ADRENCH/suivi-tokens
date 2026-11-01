@@ -35,8 +35,8 @@
   .day .bars { position: relative; width: 100%; max-width: 46px; height: 64px; display: flex; align-items: flex-end; justify-content: center; }
   .day .ghost, .day .fill { position: absolute; bottom: 0; width: 100%; border-radius: 7px 7px 3px 3px; }
   .day .ghost { background: var(--track); }
-  .day .fill { background: var(--accent); width: 62%; }
-  .day.future .fill { opacity: 0; }
+  .day .fill { background: var(--accent); }
+  .day .ghost { background: transparent; border: 1.5px dashed var(--text-3); }
   .day .lab { color: var(--text-3); }
   .day.today .lab { color: var(--text); font-weight: 600; }
   .day .val { font-variant-numeric: tabular-nums; color: var(--text-2); }
@@ -126,8 +126,7 @@
         <div class="eyebrow">Cette semaine, en % de ta limite</div>
         <div class="legend">
           <span><i style="border-color:var(--accent)"></i>Réel</span>
-          <span><i style="border-color:var(--state-ok);border-top-style:dashed"></i>Prévu</span>
-          <span><i style="border-color:var(--text-3)"></i>Semaine type</span>
+          <span><i style="border-color:var(--state-ok);border-top-style:dashed"></i>Prévu au rythme moyen</span>
         </div>
       </div>
       <div id="weekChart"></div>

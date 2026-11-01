@@ -39,12 +39,13 @@ function projectionText(w) {
   if (!w.anchorKnown) return 'Indique dans les réglages la date de réinitialisation affichée par Claude (Réglages › Utilisation), puis le % utilisé.';
   if (w.state === 'uncalibrated') return 'Tape le % affiché dans Claude (Réglages › Utilisation) pour estimer ta limite.';
   if (w.state === 'out') return 'Limite hebdomadaire atteinte selon l’estimation. Recale avec le % de Claude si besoin.';
-  const basis = w.weeksInProfile ? `d’après tes ${w.weeksInProfile} dernières semaines` : 'au rythme de cette semaine';
+  const pace = `${fmtPct(w.perDayPct)} par jour en moyenne depuis ${dateFr(w.start, { weekday: 'long' })}`;
+  const early = w.elapsedH < 12 ? ' Semaine tout juste commencée : estimation encore fragile.' : '';
   if (w.exhaustAt) {
-    const early = w.end - w.exhaustAt;
-    return `À ton rythme habituel, crédits épuisés vers <b>${whenShort(w.exhaustAt)}</b>, ${inRel(early).replace('dans ', '')} avant la réinitialisation (${basis}).`;
+    const before = inRel(w.end - w.exhaustAt).replace('dans ', '');
+    return `À ce rythme (${pace}), crédits épuisés vers <b>${whenShort(w.exhaustAt)}</b>, ${before} avant la réinitialisation.${early}`;
   }
-  return `À ton rythme habituel, tu finiras la semaine vers <b>${fmtPct(w.projEndPct)}</b> (${basis}).`;
+  return `À ce rythme (${pace}), tu finiras la semaine vers <b>${fmtPct(w.projEndPct)}</b>.${early}`;
 }
 
 /** Anneau : part utilisée, avec un repère pour le temps écoulé dans la semaine. */
@@ -67,27 +68,33 @@ function niceStep(v) {
   return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p;
 }
 
-/** Courbe cumulée de la semaine : réel, prévision et semaine type, en % de la limite. */
+/** Consommation cumulée de la semaine, en % de la limite : réel jusqu'à maintenant,
+ *  puis prolongement au rythme moyen depuis la réinitialisation. */
 function drawWeekChart(box, w, { height = 140, axis = true } = {}) {
   const N = 168;
   const scale = w.limit ? 100 / w.limit.value : 1;
   const unit = w.limit ? (v) => fmtPct(v) : (v) => fmtUsd(v);
-  const actual = w.actualCum.map((v) => v * scale);
-  const proj = w.proj.map((v) => (v == null ? null : v * scale));
-  const typical = w.typicalCum.map((v) => v * scale);
-  const top = Math.max(w.limit ? 100 : 0, ...actual, ...proj.filter((v) => v != null), ...typical) * 1.08 || 1;
-  const step = niceStep(top / 3);
-  const yMax = Math.ceil(top / step) * step;
+  const now = w.elapsedH;
+  // Points réels : fin de chaque heure écoulée, le dernier à l'instant présent.
+  const pts = w.actualCum.map((v, i) => [i === w.nowK ? now : i + 1, v * scale]);
+  pts.unshift([0, 0]);
+  const used = w.used * scale, projEnd = w.projEnd * scale;
+  const at = (k) => (k <= now ? null : used + (projEnd - used) * ((k - now) / (N - now)));
+  const top = Math.max(used, Math.min(projEnd, w.limit ? 200 : projEnd));
+  const yMax = w.limit ? Math.max(100, Math.ceil(top / 25) * 25) : Math.ceil((top * 1.08 || 1) / niceStep(top / 3)) * niceStep(top / 3);
+  const step = niceStep(yMax / 4);
 
   const W = Math.max(box.clientWidth, 200), Hh = height;
   const padL = axis ? 40 : 6, padR = 8, padT = 8, padB = 20;
   const iw = W - padL - padR, ih = Hh - padT - padB;
   const x = (k) => padL + (k / N) * iw;
-  const y = (v) => padT + ih - (Math.min(v, yMax) / yMax) * ih;
-  const line = (arr, from = 0) => arr.map((v, i) => (v == null ? '' : `${i === from || arr[i - 1] == null ? 'M' : 'L'}${x(i + 1).toFixed(1)},${y(v).toFixed(1)}`)).join('');
+  const y = (v) => padT + ih - (v / yMax) * ih;
+  const state = w.state === 'uncalibrated' ? 'ok' : w.state;
+  const clip = `wclip${Math.random().toString(36).slice(2, 8)}`;
 
   let s = `<svg viewBox="0 0 ${W} ${Hh}" width="100%" height="${Hh}" role="img" aria-label="Consommation cumulée de la semaine">`;
-  s += `<defs><linearGradient id="wfill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".28"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>`;
+  s += `<defs><linearGradient id="wfill" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity=".28"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient>`;
+  s += `<clipPath id="${clip}"><rect x="${padL}" y="${padT}" width="${iw}" height="${ih}"/></clipPath></defs>`;
   if (axis) {
     for (let v = 0; v <= yMax + 1e-9; v += step) {
       s += `<line x1="${padL}" x2="${W - padR}" y1="${y(v)}" y2="${y(v)}" stroke="var(--grid)"/>`;
@@ -97,21 +104,21 @@ function drawWeekChart(box, w, { height = 140, axis = true } = {}) {
   for (let d = 0; d < 7; d++) {
     if (d) s += `<line x1="${x(d * 24)}" x2="${x(d * 24)}" y1="${padT}" y2="${padT + ih}" stroke="var(--grid)"/>`;
     const lab = dateFr(w.start + (d * 24 + 12) * 3600, { weekday: 'short' }).replace('.', '');
-    const today = d === Math.floor(w.nowK / 24);
+    const today = d === Math.floor(now / 24);
     s += `<text x="${x(d * 24 + 12)}" y="${Hh - 5}" text-anchor="middle" ${today ? 'style="fill:var(--text);font-weight:600"' : ''}>${lab}</text>`;
   }
   if (w.limit) {
     s += `<line x1="${padL}" x2="${W - padR}" y1="${y(100)}" y2="${y(100)}" stroke="var(--state-out)" stroke-opacity=".55" stroke-dasharray="3 3"/>`;
-    s += `<text x="${W - padR}" y="${y(100) - 4}" text-anchor="end" style="fill:var(--state-out);opacity:.8">limite</text>`;
+    const ly = y(100) < padT + 12 ? y(100) + 13 : y(100) - 4;
+    s += `<text x="${W - padR}" y="${ly}" text-anchor="end" style="fill:var(--state-out);opacity:.8">limite</text>`;
   }
-  s += `<path d="${line(typical)}" fill="none" stroke="var(--text-3)" stroke-width="1.5" stroke-opacity=".7"/>`;
-  const last = actual.length;
-  if (last) {
-    s += `<path d="${line(actual)}L${x(last)},${y(0)}L${x(1)},${y(0)}Z" fill="url(#wfill)" stroke="none"/>`;
-  }
-  s += `<path d="${line(proj, w.nowK)}" fill="none" stroke="var(--state-${w.state === 'uncalibrated' ? 'ok' : w.state})" stroke-width="2" stroke-dasharray="4 4"/>`;
-  s += `<path d="${line(actual)}" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round"/>`;
-  if (last) s += `<circle cx="${x(last)}" cy="${y(actual[last - 1])}" r="4" fill="var(--accent)" stroke="var(--glass-strong)" stroke-width="2"/>`;
+  const line = pts.map(([k, v], i) => `${i ? 'L' : 'M'}${x(k).toFixed(1)},${y(v).toFixed(1)}`).join('');
+  s += `<g clip-path="url(#${clip})">`;
+  s += `<path d="${line}L${x(now)},${y(0)}Z" fill="url(#wfill)"/>`;
+  s += `<path d="M${x(now)},${y(used)}L${x(N)},${y(projEnd)}" stroke="var(--state-${state})" stroke-width="2" stroke-dasharray="4 4" fill="none"/>`;
+  s += `<path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.4" stroke-linejoin="round"/>`;
+  s += `</g>`;
+  s += `<circle cx="${x(now)}" cy="${y(Math.min(used, yMax))}" r="4" fill="var(--accent)" stroke="var(--glass-strong)" stroke-width="2"/>`;
   if (w.exhaustAt) {
     const kx = x((w.exhaustAt - w.start) / 3600);
     s += `<line x1="${kx}" x2="${kx}" y1="${padT}" y2="${padT + ih}" stroke="var(--state-warn)" stroke-dasharray="2 3"/>`;
@@ -125,13 +132,14 @@ function drawWeekChart(box, w, { height = 140, axis = true } = {}) {
   const hit = $('.hit', box);
   hit.addEventListener('mousemove', (e) => {
     const r = box.getBoundingClientRect();
-    const k = Math.max(0, Math.min(N - 1, Math.round(((e.clientX - r.left - padL) / iw) * N) - 1));
-    const rows = [];
-    if (k < actual.length) rows.push(['var(--accent)', 'Réel', actual[k]]);
-    if (proj[k] != null && k >= w.nowK) rows.push([`var(--state-${w.state === 'uncalibrated' ? 'ok' : w.state})`, 'Prévu', proj[k]]);
-    rows.push(['var(--text-3)', 'Semaine type', typical[k]]);
-    tip.innerHTML = `<b>${dateFr(w.start + (k + 1) * 3600, { weekday: 'long', hour: 'numeric' })}</b>` +
-      rows.map(([c, l, v]) => `<div class="row"><span><i class="dot" style="background:${c}"></i>${l}</span><span>${unit(v)}</span></div>`).join('');
+    const k = Math.max(0, Math.min(N, ((e.clientX - r.left - padL) / iw) * N));
+    let row;
+    if (k <= now) {
+      const p = pts.find(([pk]) => pk >= k) || pts[pts.length - 1];
+      row = ['var(--accent)', 'Réel', p[1]];
+    } else row = [`var(--state-${state})`, 'Prévu', at(k)];
+    tip.innerHTML = `<b>${dateFr(w.start + Math.round(k) * 3600, { weekday: 'long', hour: 'numeric' })}</b>` +
+      `<div class="row"><span><i class="dot" style="background:${row[0]}"></i>${row[1]}</span><span>${unit(row[2])}</span></div>`;
     tip.style.display = 'block';
     let left = e.clientX - r.left + 12;
     if (left + tip.offsetWidth > r.width) left = e.clientX - r.left - tip.offsetWidth - 12;

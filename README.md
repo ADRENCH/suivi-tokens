@@ -8,10 +8,10 @@ avec une projection de la fin de semaine selon sa façon de travailler.
 
 - **Icône dans la zone de notification** : une flamme qui se remplit au fil de la semaine
   (orange : dans les clous, rouge : à court avant la réinitialisation).
-- **Aperçu au clic** : % de la semaine, date de réinitialisation, projection, aujourd'hui
-  comparé à un jour habituel.
-- **Tableau de bord** : la semaine heure par heure (réel, prévu, semaine type), l'historique par
-  modèle, projet et session, les réglages.
+- **Aperçu au clic** : % de la semaine, date de réinitialisation, projection, consommation du
+  jour et rythme moyen.
+- **Tableau de bord** : la consommation de la semaine au fil du temps et son prolongement au
+  rythme moyen, l'historique par modèle, projet et session, les réglages.
 - **Démarrage avec Windows**, discret, directement dans la zone de notification.
 
 ## Confidentialité
@@ -51,8 +51,9 @@ l'icône ou dans les réglages). Pour l'arrêter : clic droit sur l'icône › Q
   `limite ≈ somme des crédits consommés / somme des % relevés`. Le dernier relevé que Claude Code
   garde dans `~/.claude.json` est importé automatiquement ; on en ajoute à la main depuis l'aperçu.
   Plus le % relevé est élevé, plus l'estimation est précise.
-- **Projection** : la moyenne heure par heure des 4 dernières semaines travaillées, prolongée
-  jusqu'à la réinitialisation.
+- **Projection** : le rythme moyen depuis la dernière réinitialisation (crédit consommé / temps
+  écoulé), prolongé jusqu'à la suivante. La consommation varie trop d'une semaine à l'autre pour
+  s'appuyer sur les semaines passées.
 
 ## Développement
 
@@ -60,7 +61,7 @@ l'icône ou dans les réglages). Pour l'arrêter : clic droit sur l'icône › Q
 | --- | --- |
 | `main.js` | icône, fenêtres, démarrage avec Windows, blocage réseau |
 | `scanner.js` | lecture des journaux dans un fil séparé (relecture incrémentale, cache) |
-| `ui/week.js` | semaine d'abonnement : limite, projection, semaine type |
+| `ui/week.js` | semaine d'abonnement : limite estimée, rythme moyen, projection |
 | `ui/common.js` | formats, anneau et graphique de la semaine |
 | `ui/popup.*`, `ui/dashboard.*` | aperçu et tableau de bord |
 | `assets/logo.svg` | logo ; `npm run icon` régénère `icon.ico` et `icon.png` |

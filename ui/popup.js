@@ -21,12 +21,11 @@ function render() {
   drawWeekChart($('#chart'), w, { height: 118, axis: false });
 
   const t = todayTotals(S.data);
-  const today = w.days.find((d) => d.today) || w.days[0];
   const lim = w.limit && w.limit.value;
   $('#todayPct').textContent = lim ? fmtPct((t.credit / lim) * 100) : fmtUsd(t.credit);
   $('#todaySub').textContent = `${fmt(t.tokens)} tokens · ${fmtUsd(t.cost)} API`;
-  $('#typPct').textContent = lim ? fmtPct((today.typical / lim) * 100) : fmtUsd(today.typical);
-  $('#typSub').textContent = `un ${dateFr(today.start + 43200, { weekday: 'long' })} habituel`;
+  $('#typPct').textContent = `${lim ? fmtPct(w.perDayPct) : fmtUsd(w.perDay)} / jour`;
+  $('#typSub').textContent = `depuis ${dateFr(w.start, { weekday: 'long', hour: 'numeric' })}`;
   reportHeight();
 }
 

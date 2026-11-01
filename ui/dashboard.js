@@ -46,13 +46,15 @@ function renderWeek() {
 
   const lim = w.limit && w.limit.value;
   const show = (v) => (lim ? fmtPct((v / lim) * 100) : fmtUsd(v));
-  const max = Math.max(...w.days.map((d) => Math.max(d.actual, d.typical)), 1e-9);
+  // Jours écoulés : réel. Jours à venir : ce que donnerait le rythme moyen.
+  const max = Math.max(...w.days.map((d) => Math.max(d.actual, d.past || d.today ? 0 : d.projected)), 1e-9);
   $('#days').innerHTML = w.days.map((d) => {
     const future = !d.past && !d.today;
     const lab = dateFr(d.start + 43200, { weekday: 'short' }).replace('.', '');
-    return `<div class="day ${d.today ? 'today' : ''} ${future ? 'future' : ''}" title="Réel ${show(d.actual)} · habituel ${show(d.typical)}">
-      <div class="bars"><div class="ghost" style="height:${(d.typical / max) * 100}%"></div><div class="fill" style="height:${(d.actual / max) * 100}%"></div></div>
-      <span class="val">${future ? show(d.typical) : show(d.actual)}</span><span class="lab">${lab}</span></div>`;
+    const v = future ? d.projected : d.actual;
+    return `<div class="day ${d.today ? 'today' : ''} ${future ? 'future' : ''}" title="${future ? 'Prévu au rythme moyen' : 'Réel'} : ${show(v)}">
+      <div class="bars">${future ? `<div class="ghost" style="height:${(v / max) * 100}%"></div>` : `<div class="fill" style="height:${(v / max) * 100}%"></div>`}</div>
+      <span class="val">${show(v)}</span><span class="lab">${lab}</span></div>`;
   }).join('');
 }
 
