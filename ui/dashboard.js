@@ -31,16 +31,20 @@ function renderWeek() {
   $('#planLabel').textContent = `${planName(S.config)} · semaine en cours`;
   if (!w) return;
   $('#ring').innerHTML = ringSVG(w.pct, w.state, w.elapsed, 150, 13);
-  $('#pct').textContent = w.pct == null ? '?' : fmtPct(w.pct);
+  $('#pct').textContent = fmtWeekPct(w.pct);
+  $('#pct').title = w.pct == null ? '' : `${fmtPct(w.pct)} selon l'estimation`;
   const st = $('#state');
   st.querySelector('.dot').style.background = `var(--state-${w.state})`;
   st.querySelector('span').textContent = STATE_LABEL[w.state];
-  $('#left').textContent = w.pct == null ? 'à calibrer' : `≈ ${fmtPct(Math.max(0, 100 - w.pct))}`;
+  $('#left').textContent = w.pct == null ? 'à calibrer' : `≈ ${fmtWeekPct(Math.max(0, 100 - w.pct))}`;
   $('#reset').textContent = resetLabel(w, { weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric' });
   $('#resetIn').textContent = w.anchorKnown ? inRel(w.end - S.now) : '';
   $('#projText').innerHTML = projectionText(w);
-  $('#limitNote').textContent = w.limit
-    ? `Limite estimée ≈ ${fmtUsd(w.limit.value)} de crédit par semaine (${fmtUsd(w.limit.low)} à ${fmtUsd(w.limit.high)}), d'après ${w.limit.points} relevé${w.limit.points > 1 ? 's' : ''}. Utilisé : ${fmtUsd(w.used)}.`
+  const l = w.limit;
+  $('#limitNote').textContent = l
+    ? `Limite estimée ≈ ${fmtUsd(l.value)} de crédit par semaine, d'après ${l.points} relevé${l.points > 1 ? 's' : ''}` +
+      `${l.currentWeek ? ' de cette semaine' : ' des semaines précédentes'}` +
+      `${l.ignored.length ? ` (${l.ignored.length} écarté${l.ignored.length > 1 ? 's' : ''}, incohérent${l.ignored.length > 1 ? 's' : ''})` : ''}. Utilisé : ${fmtUsd(w.used)}.`
     : `Utilisé cette semaine : ${fmtUsd(w.used)} de crédit.`;
   drawWeekChart($('#weekChart'), w, { height: 220 });
 
@@ -256,9 +260,12 @@ function renderSessions(m) {
 function renderSettings() {
   const c = S.config;
   const cals = [...c.calibrations].sort((a, b) => b.at - a.at);
+  const ignored = new Set((S.week && S.week.limit && S.week.limit.ignored) || []);
   $('#cals').innerHTML = cals.map((x) => {
     const src = x.source === 'claude.json' ? 'lu dans Claude Code' : 'saisi';
-    const credit = x.credit == null ? 'en attente des journaux' : `${fmtUsd(x.credit)} de crédit → limite ≈ ${x.pct >= 1 ? fmtUsd((x.credit / x.pct) * 100) : '—'}`;
+    const credit = x.credit == null ? 'en attente des journaux'
+      : `${fmtUsd(x.credit)} de crédit → limite ≈ ${x.pct >= 1 ? fmtUsd((x.credit / x.pct) * 100) : '—'}` +
+        (ignored.has(x.at) ? ' · écarté : incohérent avec les autres relevés, à supprimer s\'il est faux' : '');
     return `<li><span class="num" style="width:44px;font-weight:600">${x.pct} %</span>
       <span class="w">${dateFr(x.at, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })} · ${src}<span class="meta faint" style="display:block;font-size:11.5px">${credit}</span></span>
       <button type="button" data-at="${x.at}" title="Supprimer ce relevé" aria-label="Supprimer ce relevé">×</button></li>`;

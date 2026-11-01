@@ -221,7 +221,7 @@ function trayImage(pct, state, dark) {
 }
 
 const planName = () => (config.plan ? `Claude ${config.plan}` : 'Claude');
-const fmtPct = (v) => `${v < 10 ? v.toFixed(1).replace('.', ',') : Math.round(v)} %`;
+const fmtPct = (v) => `${Math.round(v)} %`; // arrondi à l'unité, comme Claude
 
 function tooltipText() {
   if (!week) return 'Suivi tokens : lecture des journaux…';

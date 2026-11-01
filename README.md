@@ -46,11 +46,14 @@ l'icône ou dans les réglages). Pour l'arrêter : clic droit sur l'icône › Q
   (tarifs dans `scanner.js`), cache 5 min / 1 h et mode rapide compris.
 - **Crédit d'abonnement** : le même coût **sans la lecture du cache**. C'est la mesure qui suit le
   mieux la limite hebdomadaire.
-- **% de la semaine** : une estimation. La limite est déduite des relevés, c'est-à-dire du %
-  affiché par Claude (Réglages › Utilisation) à un instant donné :
-  `limite ≈ somme des crédits consommés / somme des % relevés`. Le dernier relevé que Claude Code
-  garde dans `~/.claude.json` est importé automatiquement ; on en ajoute à la main depuis l'aperçu.
-  Plus le % relevé est élevé, plus l'estimation est précise.
+- **% de la semaine** : une estimation, arrondie à l'unité comme dans Claude. La limite est déduite
+  des relevés, c'est-à-dire du % affiché par Claude (Réglages › Utilisation) à un instant donné.
+  Claude arrondit ce % : un relevé de p % pour un crédit c place la limite entre c / (p + 0,5) et
+  c / (p − 0,5). L'app retient la plage compatible avec le plus de relevés, en ne gardant que ceux de
+  la semaine en cours quand il y en a ; un relevé incohérent (affichage pas encore actualisé, faute
+  de frappe) est écarté et signalé dans les réglages. Le dernier relevé que Claude Code garde dans
+  `~/.claude.json` est importé automatiquement ; on en ajoute à la main depuis l'aperçu. Plus le %
+  relevé est élevé, plus l'estimation est précise.
 - **Projection** : le rythme moyen depuis la dernière réinitialisation (crédit consommé / temps
   écoulé), prolongé jusqu'à la suivante. La consommation varie trop d'une semaine à l'autre pour
   s'appuyer sur les semaines passées.

@@ -11,6 +11,8 @@ const usdMid = usd({ maximumFractionDigits: 0 });
 const usdBig = usd({ notation: 'compact', maximumFractionDigits: 1 });
 const fmtUsd = (v) => (v < 100 ? usdSmall : v < 10000 ? usdMid : usdBig).format(v);
 const fmtPct = (v) => (v == null ? '—' : `${new Intl.NumberFormat('fr-FR', { maximumFractionDigits: v < 10 ? 1 : 0 }).format(v)} %`);
+// % de la semaine arrondi à l'unité, comme Claude l'affiche.
+const fmtWeekPct = (v) => (v == null ? '?' : `${Math.round(v)} %`);
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 function modelLabel(id) {

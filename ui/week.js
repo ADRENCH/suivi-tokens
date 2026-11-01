@@ -36,18 +36,38 @@
     return s;
   }
 
-  /** Limite hebdomadaire en $ de crédit : somme des crédits / somme des % relevés.
-   *  Les % de Claude sont arrondis à l'unité, d'où la fourchette. */
-  function estimateLimit(calibrations) {
-    const ok = calibrations.filter((c) => c.pct >= 1 && c.credit > 0).slice(-6);
-    if (!ok.length) return null;
-    const sc = ok.reduce((s, c) => s + c.credit, 0);
-    const sp = ok.reduce((s, c) => s + c.pct, 0);
+  /** Limite hebdomadaire en $ de crédit, à partir des relevés (% affiché par Claude).
+   *  Claude arrondit à l'unité : un relevé p % avec un crédit c donne une limite comprise entre
+   *  c / (p + 0,5) et c / (p − 0,5). On retient la plage compatible avec le plus de relevés
+   *  (un relevé lu sur un affichage pas encore actualisé est ainsi écarté), en privilégiant
+   *  ceux de la semaine en cours. */
+  function estimateLimit(calibrations, windowStart) {
+    const valid = calibrations.filter((c) => c.pct >= 1 && c.credit > 0);
+    const current = valid.filter((c) => c.windowStart === windowStart);
+    const pool = current.length ? current : valid.slice(-6);
+    if (!pool.length) return null;
+    const spans = pool.map((c) => [(c.credit / (c.pct + 0.5)) * 100, (c.credit / Math.max(0.5, c.pct - 0.5)) * 100]);
+    const ratio = (pool.reduce((s, c) => s + c.credit, 0) / pool.reduce((s, c) => s + c.pct, 0)) * 100;
+
+    // Balayage des bornes : segments où le nombre d'intervalles qui se recouvrent est maximal.
+    const edges = spans.flatMap(([lo, hi]) => [[lo, 1], [hi, -1]]).sort((a, b) => a[0] - b[0] || b[1] - a[1]);
+    let count = 0, best = 0, segs = [];
+    edges.forEach(([v, d], i) => {
+      count += d;
+      const next = edges[i + 1];
+      if (!next || d < 0) return;
+      if (count > best) { best = count; segs = []; }
+      if (count === best) segs.push([v, next[0]]);
+    });
+    if (!segs.length) segs = [[ratio, ratio]];
+    const [low, high] = segs.reduce((a, s) => (Math.abs((s[0] + s[1]) / 2 - ratio) < Math.abs((a[0] + a[1]) / 2 - ratio) ? s : a));
+    const value = (low + high) / 2;
+    const kept = pool.filter((_, i) => spans[i][0] <= value && value <= spans[i][1]);
     return {
-      value: (sc / sp) * 100,
-      low: (sc / (sp + 0.5 * ok.length)) * 100,
-      high: (sc / Math.max(0.5, sp - 0.5 * ok.length)) * 100,
-      points: ok.length,
+      value, low, high,
+      points: kept.length,
+      ignored: pool.filter((c) => !kept.includes(c)).map((c) => c.at),
+      currentWeek: current.length > 0,
     };
   }
 
@@ -55,7 +75,7 @@
 
   function compute(hours, cfg, now) {
     const [start, end] = windowAt(anchorOf(cfg, now), now);
-    const limit = estimateLimit(cfg.calibrations || []);
+    const limit = estimateLimit(cfg.calibrations || [], start);
     const cur = new Array(N).fill(0);
     for (const r of hours) {
       const k = Math.floor((r[0] - start) / H);

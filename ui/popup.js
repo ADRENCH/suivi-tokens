@@ -10,11 +10,11 @@ function render() {
   if (!w) return reportHeight();
 
   $('#ring').innerHTML = ringSVG(w.pct, w.state, w.elapsed, 128, 12);
-  $('#pct').textContent = w.pct == null ? '?' : fmtPct(w.pct);
+  $('#pct').textContent = fmtWeekPct(w.pct);
   const st = $('#state');
   st.querySelector('.dot').style.background = `var(--state-${w.state})`;
   st.querySelector('span').textContent = STATE_LABEL[w.state];
-  $('#left').textContent = w.pct == null ? 'à calibrer' : `≈ ${fmtPct(Math.max(0, 100 - w.pct))}`;
+  $('#left').textContent = w.pct == null ? 'à calibrer' : `≈ ${fmtWeekPct(Math.max(0, 100 - w.pct))}`;
   $('#reset').textContent = resetLabel(w, { weekday: 'long', hour: 'numeric' });
   $('#resetIn').textContent = w.anchorKnown ? inRel(w.end - S.now) : '';
   $('#projText').innerHTML = projectionText(w);
